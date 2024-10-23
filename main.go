@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+	"time"
+)
 
 const conferenceTickets = 50
 
@@ -17,6 +21,8 @@ type UserData struct {
 	numberOfTickets uint
 }
 
+var wg = sync.WaitGroup{}
+
 func main() {
 	greetUser()
 
@@ -26,7 +32,9 @@ func main() {
 
 		if isValidName && isValidEmail && isValidTicketNumber {
 			bookTicket(userTickets, firstName, lastName, email)
-			sendTicket(userTickets, firstName, lastName, email)
+
+			wg.Add(1)
+			go sendTicket(userTickets, firstName, lastName, email)
 			firstNames := getFirstNames()
 			fmt.Printf("The first names of bookings: %v \n", firstNames)
 
@@ -48,6 +56,7 @@ func main() {
 				fmt.Println("Invalid number of tickets")
 			}
 		}
+		wg.Wait()
 	}
 }
 
@@ -106,8 +115,10 @@ func bookTicket(userTickets uint, firstName string, lastName string, email strin
 }
 
 func sendTicket(userTickets uint, firstName string, lastName string, email string) {
+	time.Sleep(10 * time.Second)
 	var ticket = fmt.Sprintf("%v tickets for %v %v \n", userTickets, firstName, lastName)
 	fmt.Println("**********************")
 	fmt.Printf("Sending ticket:\n %v to email %v \n", ticket, email)
 	fmt.Println("**********************")
+	wg.Done()
 }
